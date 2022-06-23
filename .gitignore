@@ -2,5 +2,6 @@
 .bloop/
 .ammonite/
 .vscode/
+.bsp/
 metals.sbt
 target/
