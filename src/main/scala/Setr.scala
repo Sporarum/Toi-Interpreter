@@ -46,7 +46,7 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
     case None => this.wrap union this //equivalent to this.wrap.semicrement
   def semicrement: Setr = this union manualDecrement
   def decrement: Setr = asNatOption match
-    case Some(0) => throw new Error("Cannot decrement 0")
+    case Some(0) => this
     case Some(n) => s.maxBy(_.asNatOption.get) // get will always suceed: s is a nat, it contains only nats ! (and it contains something because it's not 0)
     case None => manualDecrement
 
