@@ -21,14 +21,10 @@ def printSet(s: String): Unit =
   val matched = parseSet(s)
   println(s"parsed: $s\nplain:\n${matched.plainString}\ntoString:\n$matched")
 
+extension (s: String)
+  def unary_- = "-" + s
 
-@main def hello: Unit = 
-
-  given Conversion[String, Setr] = parseSet(_)
-  extension (s: String)
-    def unary_- = "-" + s
-
-  //val ctx: Setr = "<5 1 3>"//"<0 <0 4> 2 <3> <2 3>>"
+object General:
   val show  = "dn"   // prints the context
   val clear = "([r]" //) empties context
   val unionWithWrapped = "ua"
@@ -36,7 +32,8 @@ def printSet(s: String): Unit =
   inline def map(f: String) = ifmap("<>")(f) // ctx.map(f) where f is a function
   inline def filter(cond: String) = map("u") ++ -ifmap(s"r$cond")(clear) ++ "r" // ctx.filter(cond)
 
-  // Bools:
+object Bool:
+  import General._
   val negate = "u-1" // if ctx == 0 then 1 else if ctx == 1 then 0
   val isNonEmpty = map(clear) // booleifies ctx: 0 => 0   everything else => 1
   val isEmpty = isNonEmpty ++ negate
@@ -46,7 +43,8 @@ def printSet(s: String): Unit =
   inline def exists(cond: String) = filter(cond) ++ isNonEmpty
   inline def contains(const: String) = exists(equals(const)) // if ctx contains const then 1 else 0
 
-  // pairs: // (a,b) = { {{},{a}}, {{b}} }
+object Pair: // (a,b) = { {{},{a}}, {{b}} }
+  import General._ ; import Bool._
   val toSelfPair = "uuu0ua-0" ++ ifmap(contains0)("r0") // ctx => (ctx, ctx) = { {0,{ctx}}, {{ctx}} } // explanation: ctx -uuu-> {{ctx}} -0-> {0,{{ctx}}} -ua-> {{0,{{ctx}}},0,{{ctx}}} --0-> {{0,{{ctx}}},{{ctx}}} -if(contains0)then(r0)-> {{0,{ctx}},{{ctx}}}
   val toPairEmptySelf = "uuu<<><0>>"
   val toPairSelfEmpty = "uu0u<<0>>"
@@ -58,6 +56,12 @@ def printSet(s: String): Unit =
   inline def mapFirst(f: String) = ifmap(contains0)(map(map(f)))
   inline def mapSecond(f: String) = -mapFirst(f)
 
+@main def hello: Unit = 
+  import General._
+  import Bool._
+  import Pair._
+
+  given Conversion[String, Setr] = parseSet(_)
   //eval("(<>[dnua]")    // prints all numbers
   //eval("r", ctx)       // converts pair to set (a,b) => {a,b}
   //wip val isSingleton = "(" ++ map("u") ++ "[]" //newPair = (a,b) = { {{},{x}}, {{y}} }
