@@ -45,7 +45,22 @@ def printSet(s: String): Unit =
   inline def equals(const: String) = notEquals(const) ++ negate
   inline def exists(cond: String) = filter(cond) ++ isNonEmpty
   inline def contains(const: String) = exists(equals(const)) // if ctx contains const then 1 else 0
-  eval("uu0ua-0", "(2 3)")
+
+  // pairs: // (a,b) = { {{},{a}}, {{b}} }
+  val toSelfPair = "uuu0ua-0" ++ ifmap(contains0)("r0") // ctx => (ctx, ctx) = { {0,{ctx}}, {{ctx}} } // explanation: ctx -uuu-> {{ctx}} -0-> {0,{{ctx}}} -ua-> {{0,{{ctx}}},0,{{ctx}}} --0-> {{0,{{ctx}}},{{ctx}}} -if(contains0)then(r0)-> {{0,{ctx}},{{ctx}}}
+  val toPairEmptySelf = "uuu<<><0>>"
+  val toPairSelfEmpty = "uu0u<<0>>"
+
+  //eval("(<>[dnua]")    // prints all numbers
+  //eval("r", ctx)       // converts pair to set (a,b) => {a,b}
+  //wip val isSingleton = "(" ++ map("u") ++ "[]" //newPair = (a,b) = { {{},{x}}, {{y}} }
+  // {a b} -> {{a} {b}}
+  // {a}   -> {{a}}
+  // yes: {a} {{}}   no: {a b} {a b ...} doesnt matter that much: {}
+  //inline def and(cond1: String, cond2: String) = ???
+  //inline def or(cond1: String, cond2: String) = ???
+  //inline def onFirst(f: String) = ???
+
   /*
   inline def elvis(p: String, q: String) = // if ctx then p else q assuming ctx == 0 or ctx == 1
 
