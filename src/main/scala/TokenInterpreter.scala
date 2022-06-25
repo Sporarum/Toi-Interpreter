@@ -14,10 +14,8 @@ object Contexts:
 import Contexts.*
 
 object TokenInterpreter {
-  // Assumes failing c's should remain unchanged (they could also get removed)
-  val failingCsShouldGetDropped = false
 
-  def eval(program: Program): WithSideEffects[Setr] = eval(program, Setr.empty)
+  inline def eval(program: Program): WithSideEffects[Setr] = eval(program, Setr.empty)
 
   @tailrec
   def eval(program: Program, ctx: Setr): WithSideEffects[Setr] =
@@ -41,7 +39,6 @@ object TokenInterpreter {
     case WhileDo(condition: Program, function: Program, emptyIsSucess: Boolean) =>
       @tailrec
       def rec(currCtx: Setr): WithSideEffects[Setr] =
-        given Context[Setr] = Context(currCtx)
 
         val condRes = eval(condition, currCtx)
         if condRes.isEmpty == emptyIsSucess then
