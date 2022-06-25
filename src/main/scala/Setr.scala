@@ -52,7 +52,7 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
 
   private def manualDecrement: Setr = Setr(s.flatMap(setr => setr.s))
 
-  def plainString: String = this.map(_.plainString).mkString("<"," ",">")
+  def plainString: String = this.s.map(_.plainString).mkString("<"," ",">")
   override def toString: String = {
       optionIf(printAsOrdinals)(this.asNatOption ) orElse
       optionIf(printAsPair    )(this.asPairOption)
@@ -69,7 +69,10 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
   def -(that: Setr): Setr = excl(that)
   def excl(that: Setr): Setr = Setr(s excl that)
 
-  export s.{map, isEmpty, size, contains}
+  def map(f: Setr => Setr): Setr = Setr(s.map(f))
+  def flatMap(f: Setr => IterableOnce[Setr]): Setr = Setr(s.flatMap(f))
+
+  export s.{isEmpty, size, contains}
 
   // computeAsXOption:
   
@@ -80,7 +83,7 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
    */
   private def computeAsNatOption: Option[Nat] = 
     val z: Option[(Nat, List[Nat])] = Some( (-1, List()) ) // List assumed to be always sorted (from min to max) ! see nUngrouped
-    val res = this.map(_.asNatOption).foldLeft(z){
+    val res = s.map(_.asNatOption).foldLeft(z){
       case (acc, None) => None
       case (None, curr) => None
       case (Some((maxGrouped, ungrouped)), Some(n)) if n == maxGrouped + 1 =>
@@ -106,7 +109,7 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
   private def computeAsUnwrappedOption: Option[Setr] = Option.when(this.size == 1)(s.head)
 
   private def computeAsPairOption: Option[(Setr, Setr)] = // this == (a,b) <=> this == {{a},{a,b}}
-    val singletonContents = this.map( subs => (subs,subs.asUnwrappedOption) ).collect{ case (wrapped,Some(unwrapped)) => (wrapped, unwrapped) }
+    val singletonContents = s.map( subs => (subs,subs.asUnwrappedOption) ).collect{ case (wrapped,Some(unwrapped)) => (wrapped, unwrapped) }
 
     if singletonContents.size == 1 then // {a} should be the only singleton
       val (wrappedA, a) = singletonContents.head

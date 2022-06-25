@@ -29,20 +29,14 @@ object TokenInterpreter {
   def bigStep(instruction: Instruction, ctx: Setr): Setr = instruction match
 
     case Foreach(condition: Program, function: Program, emptyIsSucess: Boolean) =>
-      val protoctx = ctx.map{ c =>
-        given Context[Setr] = Context(c)
-
+      ctx.map{ c =>
         val condRes = eval(condition, ctx = c)
         if condRes.isEmpty == emptyIsSucess then //equivalent to: (empty && emptyIsSuccess) || (!empty && !emptyIsSuccess)
           val funRes = eval(function, ctx = c)
           funRes
         else
-          if failingCsShouldGetDropped then
-            Setr.empty
-          else
-            c
+          c
       }
-      Setr(protoctx)
     
     case WhileDo(condition: Program, function: Program, emptyIsSucess: Boolean) =>
       @tailrec
