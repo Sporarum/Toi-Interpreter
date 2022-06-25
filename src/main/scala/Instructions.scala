@@ -21,7 +21,7 @@ case class  Foreach(condition: Program, function: Program, emptyIsSucess: Boolea
  */
 case class  WhileDo(condition: Program, function: Program, emptyIsSucess: Boolean) extends Instruction
 
-case object Increment       extends Instruction
+case object Semicrement     extends Instruction
 case object Decrement       extends Instruction
 case object Wrap            extends Instruction
 case object Newline         extends Instruction

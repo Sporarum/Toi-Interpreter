@@ -15,10 +15,8 @@ object Setr:
   def apply(s: Set[Setr]) = new Setr(s)()
   def empty = Setr(Set.empty)(natOp = Option(0))
   def fromNat(n: Nat): Setr = 
-    if n == 0 then
-      empty
-    else
-      Setr.fromNat(n-1).increment
+    if n == 0 then empty 
+    else Setr.fromNat(n-1).increment
 
 case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
   /**
@@ -45,7 +43,8 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
   def wrap: Setr = Setr(Set(this)) // creates: {this}
   def increment: Setr = asNatOption match
     case Some(n) => Setr( s + this )(natOp = Some(n+1))
-    case None => this union manualDecrement
+    case None => this.wrap union this //equivalent to this.wrap.semicrement
+  def semicrement: Setr = this union manualDecrement
   def decrement: Setr = asNatOption match
     case Some(0) => throw new Error("Cannot decrement 0")
     case Some(n) => s.maxBy(_.asNatOption.get) // get will always suceed: s is a nat, it contains only nats ! (and it contains something because it's not 0)

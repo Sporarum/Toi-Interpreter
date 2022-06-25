@@ -68,7 +68,7 @@ object TokenInterpreter {
 
     case Add(s: Setr)    => ctx + s
     case Remove(s: Setr) => ctx - s
-    case Increment       => ctx.increment
+    case Semicrement       => ctx.semicrement
     case Decrement       => ctx.decrement
     case Wrap            => ctx.wrap
   

@@ -6,7 +6,7 @@ import scala.util.parsing.combinator.token.Tokens
 object Parser extends RegexParsers {
 
   def program: Parser[Program] = (instruction).*
-  def instruction: Parser[Instruction] = add | remove | foreach | whileDo | newline | printContext | increment | decrement | singletonWrap
+  def instruction: Parser[Instruction] = add | remove | foreach | whileDo | newline | printContext | semicrement | decrement | singletonWrap
 
   def add:     Parser[Add]          =        set  ^^ { Add(_) }
   def remove:  Parser[Remove]       = "-" ~> set  ^^ { Remove(_) }
@@ -16,7 +16,7 @@ object Parser extends RegexParsers {
 
   def newline       = "n" ^^^ Newline
   def printContext  = "d" ^^^ PrintContext
-  def increment     = "a" ^^^ Increment
+  def semicrement   = "a" ^^^ Semicrement
   def decrement     = "r" ^^^ Decrement
   def singletonWrap = "u" ^^^ Wrap
 
