@@ -37,7 +37,7 @@ def printSet(s: String): Unit =
   inline def filter(cond: String) = map("u") ++ -ifmap(s"r$cond")(clear) ++ "r" // ctx.filter(cond)
 
   // Bools:
-  val negate = "-([1]r" // if ctx == 0 then 1 else if ctx == 1 then 0
+  val negate = "u-1" // if ctx == 0 then 1 else if ctx == 1 then 0
   val isNonEmpty = map(clear) // booleifies ctx: 0 => 0   everything else => 1
   val isEmpty = isNonEmpty ++ negate
   val contains0 = s"({$clear 0} -<<>>"
