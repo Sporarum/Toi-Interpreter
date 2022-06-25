@@ -51,6 +51,13 @@ def printSet(s: String): Unit =
   val toPairEmptySelf = "uuu<<><0>>"
   val toPairSelfEmpty = "uu0u<<0>>"
 
+  val getSecond = ifmap(contains0)(clear) ++ "rrr"
+  val getFirst = -getSecond
+
+  inline def mapBoth(f: String) = map(map(map(f)))
+  inline def mapFirst(f: String) = ifmap(contains0)(map(map(f)))
+  inline def mapSecond(f: String) = -mapFirst(f)
+
   //eval("(<>[dnua]")    // prints all numbers
   //eval("r", ctx)       // converts pair to set (a,b) => {a,b}
   //wip val isSingleton = "(" ++ map("u") ++ "[]" //newPair = (a,b) = { {{},{x}}, {{y}} }
