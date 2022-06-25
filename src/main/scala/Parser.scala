@@ -21,10 +21,11 @@ object Parser extends RegexParsers {
   def singletonWrap = "u" ^^^ Wrap
 
 
-  def set:  Parser[Setr]       = natural | manualSet
+  def set:  Parser[Setr]       = manualSet | natural | pair
 
   def manualSet:  Parser[Setr] = "<" ~> set.* <~ ">"  ^^ { l => Setr(l.toSet) }
   def natural:    Parser[Setr] = number               ^^ { Setr.fromNat(_) }
+  def pair:       Parser[Setr] = "(" ~> set ~ set <~ ")" ^^ { case a ~ b => Setr.fromPair(a, b) }
 
   def number: Parser[Nat]      = """(0|[1-9]\d*)""".r ^^ { _.toInt }
 }

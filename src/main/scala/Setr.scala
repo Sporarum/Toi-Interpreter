@@ -19,8 +19,9 @@ object Setr:
   def fromNat(n: Nat): Setr = 
     if n == 0 then empty 
     else Setr.fromNat(n-1).increment
+  def fromPair(a: Setr, b: Setr): Setr = Setr(Set( Setr(Empty, a.wrap), b.wrap.wrap ))(pairOp = Some( (a,b) )) // this == (a,b) <=> this == { {{},{a}}, {{b}} }
 
-case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
+case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, pairOp: Option[(Setr,Setr)] = None):
   /**
    * Is this set a Von Neumann ordinal ? (well technically only works on naturals, hence Nat)
    * if yes, returns Some of that ordinal
@@ -110,20 +111,11 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
 
   private def computeAsSingletonOption: Option[Setr] = Option.when(this.size == 1)(s.head)
 
-  private def computeAsPairOption: Option[(Setr, Setr)] = // this == (a,b) <=> this == {{a},{a,b}}
-    val singletonContents = s.map( subs => (subs,subs.asUnwrappedOption) ).collect{ case (wrapped,Some(unwrapped)) => (wrapped, unwrapped) }
-
-    if singletonContents.size == 1 then // {a} should be the only singleton
-      val (wrappedA, a) = singletonContents.head
-      val (containsA, notContainsA) = s.partition( _ contains a ) // containsA = {{a},{a,b, ...}, ... }
-      if notContainsA.isEmpty then
-        if containsA.size == 1 then // this = {{a}} = {{a},{a,a}} = (a,a)
-          Some( (a,a) )
-        else
-          Setr( containsA - wrappedA ).asUnwrappedOption.flatMap{ abSubset => // abSubset = {a,b, ...}
-            (abSubset - a).asUnwrappedOption.map( b => (a, b) )
-          }
-      else
-        None
-    else
-      None
+  private def computeAsPairOption: Option[(Setr, Setr)] = // this == (a,b) <=> this == { {{},{a}}, {{b}} }
+    this.partition(_.contains(Empty)) match
+      case (Singleton(protoA), Singleton(protoB)) => // {{{},{a}}},{{{b}}} => protoA = {{},{a}}, protoB = {{b}}
+        def asSingletonSingleton(s: Setr) = s.asSingletonOption.flatMap(_.asSingletonOption)
+        val aOption = asSingletonSingleton(protoA - Empty) //protoA - Empty = {{a}}
+        val bOption = asSingletonSingleton(protoB)
+        aOption zip bOption
+      case _ => None
