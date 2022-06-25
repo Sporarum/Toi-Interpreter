@@ -7,12 +7,14 @@ def optionIf[T](cond: Boolean)(op: => Option[T]): Option[T] = if cond then op el
 
 type Nat = Int
 
-object Empty:
-  def apply(): Setr = Setr(Set.empty)
-  def unapply(s: Setr): Boolean = s.isEmpty
+val Empty = Setr(Set.empty)
+
+object Singleton:
+  def unapply(s: Setr): Option[Setr] = s.asSingletonOption
 
 object Setr:
-  def apply(s: Set[Setr]) = new Setr(s)()
+  def apply(setrs: Setr*): Setr = Setr(setrs.toSet)
+  def apply(s: Set[Setr]): Setr = new Setr(s)()
   def empty = Setr(Set.empty)(natOp = Option(0))
   def fromNat(n: Nat): Setr = 
     if n == 0 then empty 
@@ -31,7 +33,7 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
    * if yes, returns Some of the contained element
    * else returns None
    */
-  lazy val asUnwrappedOption: Option[Setr] = computeAsUnwrappedOption
+  lazy val asSingletonOption: Option[Setr] = computeAsSingletonOption
   
   /**
    * Is this set a pair ? assuming (a,b) = {{a},{a,b}}
@@ -62,7 +64,7 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
   // Usual Set methods:
 
   def union(that: Setr): Setr = Setr(this.s union that.s)
-  //def partition(p: Setr => Boolean): (Setr, Setr) = { val (t, f) = s.partition(p); (Setr(t), Setr(f)) }
+  def partition(p: Setr => Boolean): (Setr, Setr) = { val (t, f) = s.partition(p); (Setr(t), Setr(f)) }
 
   def +(that: Setr): Setr = incl(that)
   def incl(that: Setr): Setr = Setr(s incl that)
@@ -106,7 +108,7 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None):
       case _ => None
     }
 
-  private def computeAsUnwrappedOption: Option[Setr] = Option.when(this.size == 1)(s.head)
+  private def computeAsSingletonOption: Option[Setr] = Option.when(this.size == 1)(s.head)
 
   private def computeAsPairOption: Option[(Setr, Setr)] = // this == (a,b) <=> this == {{a},{a,b}}
     val singletonContents = s.map( subs => (subs,subs.asUnwrappedOption) ).collect{ case (wrapped,Some(unwrapped)) => (wrapped, unwrapped) }
