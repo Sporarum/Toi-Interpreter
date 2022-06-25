@@ -25,13 +25,16 @@ def printSet(s: String): Unit =
 @main def hello: Unit = 
 
   given Conversion[String, Setr] = parseSet(_)
+  extension (s: String)
+    def unary_- = "-" + s
 
   //val ctx: Setr = "<5 1 3>"//"<0 <0 4> 2 <3> <2 3>>"
   val show  = "dn"   // prints the context
   val clear = "([r]" // empties context
   val unionWithWrapped = "ua"
-  inline def map(f: String) = s"(<>{$f}" //) ctx.map(f) where f is a function
-  inline def filter(cond: String) = map("u") ++ s"-(r$cond{$clear}r" //) ctx.filter(cond)
+  inline def ifmap(cond: String)(f: String) = s"($cond{$f}" //)
+  inline def map(f: String) = ifmap("<>")(f) // ctx.map(f) where f is a function
+  inline def filter(cond: String) = map("u") ++ -ifmap(s"r$cond")(clear) ++ "r" // ctx.filter(cond)
 
   // Bools:
   val negate = "-([1]r" // if ctx == 0 then 1 else if ctx == 1 then 0
