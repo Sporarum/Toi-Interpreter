@@ -1,4 +1,5 @@
 
+import scala.compiletime.error
 import Parser._
 
 def eval(s: String): WithSideEffects[Unit] = eval(s, Setr.empty)
@@ -44,7 +45,66 @@ object Bool:
   inline def exists(cond: String) = filter(cond) ++ isNonEmpty
   inline def contains(const: String) = exists(equals(const)) // if ctx contains const then 1 else 0
 
-object Pair: // (a,b) = { {{},{a}}, {{b}} }
+class Tupler[N <: Int & Singleton](val n: N):
+  //inline if n < 2 then error("Tuple with less than 2 elements") // inline if can only be used in an inline method
+  if n < 2 then throw new Exception("Tuple with less than 2 elements")
+  inline def filledWithContext: String        = Tupler.filledWithContext(n)
+  inline def get(i: Int): String              = Tupler.get(n)(i)
+  inline def mapAt(i: Int)(f: String): String = Tupler.mapAt(n)(i)(f)
+  inline def map(f: String): String        = Tupler.map(n)(f)
+  inline def toSet: String                    = Tupler.toSet(n)
+  inline def union: String                    = Tupler.union(n)
+  inline def ifmap(cond: String)(f: String)   = this.map(General.ifthen(cond)(f))
+
+
+object Tupler:
+  private inline def check(n: Int) = inline if n < 2 then error("Tuple with less than 2 elements")
+
+  private inline def filledWithContext(n: Int): String = 
+    check(n)
+    inline if n==2 then 
+      Pair.fromPairPair
+    else
+      Pair.fromPairPair ++ Pair.mapSecond(filledWithContext(n-1))
+
+  private inline def get(n: Int)(i: Int): String = // 0 indexed !
+    check(n)
+    inline if n==2 then 
+      inline if i==0 then Pair.getFirst else inline if i==1 then Pair.getSecond else error("get index is greater than Tuple size")
+    else
+      inline if i==0 then Pair.getFirst else Pair.getSecond ++ get(n-1)(i-1)
+
+  private inline def mapAt(n: Int)(i: Int)(f: String): String = 
+    check(n)
+    inline if n==2 then
+      inline if i==0 then Pair.mapFirst(f) else inline if i==1 then Pair.mapSecond(f) else error("mapAt index is greater than Tuple size")
+    else
+      inline if i==0 then Pair.mapFirst(f) else Pair.mapSecond(mapAt(n-1)(i-1)(f))
+
+  private inline def map(n: Int)(f: String): String = 
+    check(n)
+    inline if n==2 then
+      Pair.mapBoth(f)
+    else
+      Pair.mapFirst(f) ++ Pair.mapSecond(map(n-1)(f))
+
+  private inline def toSet(n: Int): String = 
+    check(n)
+    inline if n==2 then
+      Pair.toSet
+    else
+      Pair.mapFirst("u") ++ Pair.mapSecond(toSet(n-1)) ++ Pair.union     //(1 (2 3)) -> ({1} (2 3)) -> ({1} {2 3}) -> {1 2 3}
+
+  private inline def union(n: Int): String = 
+    check(n)
+    inline if n==2 then
+      Pair.union
+    else
+      Pair.mapSecond(union(n-1)) ++ Pair.union //(1 (2 3)) -> (1 2u3) -> 1u2u3
+end Tupler
+
+
+object Pair: // (a,b) = { {0,{a}}, {{b}} }
   import General._ ; import Bool._
   val _wrapFirst = "uu0u" // ctx => { {0,{ctx}} } //explanation: ctx -uu-> {{ctx}} -0-> {0,{ctx}} -u-> {{0,{ctx}}}
   val _wrapSecond = "uuu" // ctx => {{{ctx}}}
@@ -71,7 +131,6 @@ object Pair: // (a,b) = { {{},{a}}, {{b}} }
 @main def hello: Unit = 
   import General._
   import Bool._
-  import Pair._
 
   given Conversion[String, Setr] = parseSet(_)
   //eval("(<>[dnua]")    // prints all numbers
