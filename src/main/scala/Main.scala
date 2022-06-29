@@ -29,6 +29,7 @@ object General:
   val clear = "([r]" //) empties context
   val unionWithWrapped = "ua"
   inline def ifmap(cond: String)(f: String) = s"($cond{$f}" //)
+  inline def ifthen(cond: String)(f: String) = "u" ++ ifmap(cond)(f) ++ "r" // if cond(ctx) then f(ctx)
   inline def map(f: String) = ifmap("<>")(f) // ctx.map(f) where f is a function
   inline def filter(cond: String) = map("u") ++ -ifmap(s"r$cond")(clear) ++ "r" // ctx.filter(cond)
 
@@ -62,8 +63,10 @@ object Pair: // (a,b) = { {{},{a}}, {{b}} }
   val swap = mapSecond(_wrapFirst) ++ mapFirst(_wrapSecond) ++ union
   
   inline def mapBoth(f: String) = map(map(map(f)))
-  inline def mapFirst(f: String) = ifmap(contains0)(map(map(f)))
+  inline def mapFirst(f: String) = General.ifmap(contains0)(map(map(f)))
   inline def mapSecond(f: String) = -mapFirst(f)
+
+  inline def ifmap(cond: String)(f: String) = mapBoth(ifthen(cond)(f))
 
 @main def hello: Unit = 
   import General._
