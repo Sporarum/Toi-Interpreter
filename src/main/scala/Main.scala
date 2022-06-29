@@ -45,13 +45,22 @@ object Bool:
 
 object Pair: // (a,b) = { {{},{a}}, {{b}} }
   import General._ ; import Bool._
-  val toSelfPair = "uuu0ua-0" ++ ifmap(contains0)("r0") // ctx => (ctx, ctx) = { {0,{ctx}}, {{ctx}} } // explanation: ctx -uuu-> {{ctx}} -0-> {0,{{ctx}}} -ua-> {{0,{{ctx}}},0,{{ctx}}} --0-> {{0,{{ctx}}},{{ctx}}} -if(contains0)then(r0)-> {{0,{ctx}},{{ctx}}}
-  val toPairEmptySelf = "uuu<<><0>>"
-  val toPairSelfEmpty = "uu0u<<0>>"
+  val _wrapFirst = "uu0u" // ctx => { {0,{ctx}} } //explanation: ctx -uu-> {{ctx}} -0-> {0,{ctx}} -u-> {{0,{ctx}}}
+  val _wrapSecond = "uuu" // ctx => {{{ctx}}}
 
-  val getSecond = ifmap(contains0)(clear) ++ "rrr"
+  val fromPairPair = _wrapFirst ++ "a-0" ++ ifmap(contains0)("r0") // ctx => (ctx, ctx) = { {0,{ctx}}, {{ctx}} } // explanation: ctx -wrapFirst-> {{0,{ctx}}} -a-> {{0,{{ctx}}},0,{{ctx}}} --0-> {{0,{{ctx}}},{{ctx}}} -if(contains0)then(r0)-> {{0,{ctx}},{{ctx}}}
+  val fromEmptySelf = _wrapSecond ++ "<<><0>>"
+  val fromSelfEmpty = _wrapFirst ++ "<<0>>"
+
+  val toSet = "rr" // (a,b) => {a,b} // explanation: { {0,{a}}, {{b}} } -r-> { 0,{a},{b} } -r-> {a,b}
+  val union = toSet + "r" // (a,b) => {a,b} // explanation: (a,b) -toSet-> {a,b} -r-> a union b
+
+  val getSecond = ifmap(contains0)(clear) ++ union // first component will be the empty set
   val getFirst = -getSecond
-
+  
+  // TODO: find more efficient way ?
+  val swap = mapSecond(_wrapFirst) ++ mapFirst(_wrapSecond) ++ union
+  
   inline def mapBoth(f: String) = map(map(map(f)))
   inline def mapFirst(f: String) = ifmap(contains0)(map(map(f)))
   inline def mapSecond(f: String) = -mapFirst(f)
