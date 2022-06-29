@@ -23,6 +23,12 @@ object Bool:
   inline def equals(const: String) = notEquals(const) ++ negate
   inline def exists(cond: String) = filter(cond) ++ isNonEmpty
   inline def contains(const: String) = exists(equals(const)) // if ctx contains const then 1 else 0
+  inline private def _2op(op: String)(cond1: String, cond2: String) = Pair.fromSelfSelf ++ Pair.mapFirst(cond1) ++ Pair.mapSecond(cond2) ++ op
+  inline def and(cond1: String, cond2: String) = _2op(Pair.and)(cond1,cond2)
+  inline def nand(cond1: String, cond2: String) = _2op(Pair.nand)(cond1,cond2)
+  inline def or(cond1: String, cond2: String) = _2op(Pair.or)(cond1,cond2)
+  inline def nor(cond1: String, cond2: String) = _2op(Pair.nor)(cond1,cond2)
+  inline def xor(cond1: String, cond2: String) = _2op(Pair.xor)(cond1,cond2)
   
 object Pair: // (a,b) = { {0,{a}}, {{b}} }
   import General._ ; import Bool._
@@ -35,6 +41,11 @@ object Pair: // (a,b) = { {0,{a}}, {{b}} }
 
   val toSet = "rr" // (a,b) => {a,b} // explanation: { {0,{a}}, {{b}} } -r-> { 0,{a},{b} } -r-> {a,b}
   val union = toSet + "r" // (a,b) => {a,b} // explanation: (a,b) -toSet-> {a,b} -r-> a union b
+  val or = union
+  val nor = or ++ negate
+  val nand = mapBoth(negate) ++ or
+  val and = nand ++ negate
+  val xor = fromSelfSelf ++ mapFirst(nand) ++ mapSecond(or) ++ and
 
   val getSecond = General.ifmap(contains0)(clear) ++ union // first component will be the empty set
   val getFirst = -getSecond
