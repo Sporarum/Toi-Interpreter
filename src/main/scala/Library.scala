@@ -44,6 +44,9 @@ object BinOps:
   val and = nand ++ negate
   val xor = fromSelfSelf ++ mapFirst(nand) ++ mapSecond(or) ++ and
 
+  //Nat:
+  val add = whiledo(Pair.getFirst)(Pair.mapSecond("ua") ++ Pair.mapFirst("r")) ++ Pair.getSecond
+
 
 object Pair: // (a,b) = { {0,{a}}, {{b}} }
   import General._ ; import Bool._
