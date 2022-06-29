@@ -26,21 +26,21 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, pairOp: Option[(Setr,Se
    * Is this set a Von Neumann ordinal ? (well technically only works on naturals, hence Nat)
    * if yes, returns Some of that ordinal
    * else returns None
-   */
+  **/
   lazy val asNatOption: Option[Nat] = natOp orElse computeAsNatOption
 
   /**
    * Is this set a singleton ?
    * if yes, returns Some of the contained element
    * else returns None
-   */
+  **/
   lazy val asSingletonOption: Option[Setr] = computeAsSingletonOption
   
   /**
    * Is this set a pair ? assuming (a,b) = {{a},{a,b}}
    * if yes, returns Some of that pair
    * else returns None
-   */
+  **/
   lazy val asPairOption: Option[(Setr, Setr)] = computeAsPairOption
 
   def wrap: Setr = Setr(Set(this)) // creates: {this}
@@ -83,7 +83,7 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, pairOp: Option[(Setr,Se
    * Checks if this set is a Nat, i.e. if it contains only Nats from 0 to n
    * if it is, returns Some(n+1)
    * else returns None
-   */
+  **/
   private def computeAsNatOption: Option[Nat] = 
     val z: Option[(Nat, List[Nat])] = Some( (-1, List()) ) // List assumed to be always sorted (from min to max) ! see nUngrouped
     val res = s.map(_.asNatOption).foldLeft(z){
