@@ -1,6 +1,7 @@
 import scala.annotation.tailrec
 
 val printAsOrdinals = true
+val printAsTuple    = true
 val printAsPair     = true
 
 def optionIf[T](cond: Boolean)(op: => Option[T]): Option[T] = if cond then op else None
@@ -19,9 +20,16 @@ object Setr:
   def fromNat(n: Nat): Setr = 
     if n == 0 then empty 
     else Setr.fromNat(n-1).increment
-  def fromPair(a: Setr, b: Setr): Setr = Setr(Set( Setr(Empty, a.wrap), b.wrap.wrap ))(pairOp = Some( (a,b) )) // this == (a,b) <=> this == { {{},{a}}, {{b}} }
+  private def _fromPair(a: Setr, b: Setr): Set[Setr] = Set( Setr(Empty, a.wrap), b.wrap.wrap )
+  def fromPair(a: Setr, b: Setr): Setr = Setr(_fromPair(a,b))(pairOp = Some( (a,b) )) // this == (a,b) <=> this == { {{},{a}}, {{b}} }
+  def fromTuple(elems: Setr*): Setr = elems match
+    case Seq() => throw new Exception("Setr.fromTuple needs at least one element")
+    case Seq(a) => a
+    case a :: rest => 
+      val nRest = fromTuple(rest: _*)
+      Setr(_fromPair(a,nRest))(pairOp = Some(a, nRest), tupleOp = Some(a +: nRest.asTuple)) //TODO: test, then add tupleOp to Setr
 
-case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, pairOp: Option[(Setr,Setr)] = None):
+case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Setr]] = None, pairOp: Option[(Setr,Setr)] = None):
   /**
    * Is this set a Von Neumann ordinal ? (well technically only works on naturals, hence Nat)
    * if yes, returns Some of that ordinal
@@ -43,6 +51,12 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, pairOp: Option[(Setr,Se
   **/
   lazy val asPairOption: Option[(Setr, Setr)] = computeAsPairOption
 
+  /**
+   * this set as a tuple, assuming (a,b,c,...) = (a,(b,c,...)), and (this) otherwise
+  **/
+  lazy val asTuple: List[Setr] = tupleOp getOrElse computeAsTuple
+  lazy val asTupleOption: Option[List[Setr]] = tupleOp orElse computeAsTupleOption
+
   def wrap: Setr = Setr(Set(this)) // creates: {this}
   def increment: Setr = asNatOption match
     case Some(n) => Setr( s + this )(natOp = Some(n+1))
@@ -57,7 +71,8 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, pairOp: Option[(Setr,Se
 
   def plainString: String = this.s.map(_.plainString).mkString("<"," ",">")
   override def toString: String = {
-      optionIf(printAsOrdinals)(this.asNatOption ) orElse
+      optionIf(printAsOrdinals)(this.asNatOption) orElse
+      optionIf(printAsTuple   )(this.asTupleOption.map(_.mkString("("," ",")"))) orElse
       optionIf(printAsPair    )(this.asPairOption)
 
     }.map(_.toString) getOrElse s.mkString("<"," ",">")
@@ -119,3 +134,12 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, pairOp: Option[(Setr,Se
         val bOption = asSingletonSingleton(protoB)
         aOption zip bOption
       case _ => None
+  
+  private def computeAsTuple: List[Setr] = // this == (a,b,c, ...) <=> this == (a,(b,c,...)) and this = (this)
+    asPairOption
+      .map{ (a, rest) => a +: rest.asTuple }
+      .getOrElse(List(this))
+  
+  private def computeAsTupleOption: Option[List[Setr]] = //only "real" tuples
+    Some(asTuple).filter(_.size >= 2)
+  
