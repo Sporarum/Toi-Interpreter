@@ -8,6 +8,7 @@ object General:
   val show  = "dn"   // prints the context
   val clear = "([r]" //) empties context
   val unionWithWrapped = "ua"
+  inline def whiledo(cond: String)(f: String) = s"($cond[$f]" //)
   inline def ifmap(cond: String)(f: String) = s"($cond{$f}" //)
   inline def ifthen(cond: String)(f: String) = "u" ++ ifmap(cond)(f) ++ "r" // if cond(ctx) then f(ctx)
   inline def map(f: String) = ifmap("<>")(f) // ctx.map(f) where f is a function
@@ -23,13 +24,27 @@ object Bool:
   inline def equals(const: String) = notEquals(const) ++ negate
   inline def exists(cond: String) = filter(cond) ++ isNonEmpty
   inline def contains(const: String) = exists(equals(const)) // if ctx contains const then 1 else 0
+
   inline private def _2op(op: String)(cond1: String, cond2: String) = Pair.fromSelfSelf ++ Pair.mapFirst(cond1) ++ Pair.mapSecond(cond2) ++ op
-  inline def and(cond1: String, cond2: String) = _2op(Pair.and)(cond1,cond2)
-  inline def nand(cond1: String, cond2: String) = _2op(Pair.nand)(cond1,cond2)
-  inline def or(cond1: String, cond2: String) = _2op(Pair.or)(cond1,cond2)
-  inline def nor(cond1: String, cond2: String) = _2op(Pair.nor)(cond1,cond2)
-  inline def xor(cond1: String, cond2: String) = _2op(Pair.xor)(cond1,cond2)
-  
+  inline def and(cond1: String, cond2: String) = _2op(BinOps.and)(cond1,cond2)
+  inline def nand(cond1: String, cond2: String) = _2op(BinOps.nand)(cond1,cond2)
+  inline def or(cond1: String, cond2: String) = _2op(BinOps.or)(cond1,cond2)
+  inline def nor(cond1: String, cond2: String) = _2op(BinOps.nor)(cond1,cond2)
+  inline def xor(cond1: String, cond2: String) = _2op(BinOps.xor)(cond1,cond2)
+
+object BinOps:
+  import General._ ; import Bool._; import Pair._
+  //Setr:
+  val union = toSet + "r" // (a,b) => {a,b} // explanation: (a,b) -toSet-> {a,b} -r-> a union b
+
+  //Bool:
+  val or = union
+  val nor = or ++ negate
+  val nand = mapBoth(negate) ++ or
+  val and = nand ++ negate
+  val xor = fromSelfSelf ++ mapFirst(nand) ++ mapSecond(or) ++ and
+
+
 object Pair: // (a,b) = { {0,{a}}, {{b}} }
   import General._ ; import Bool._
   val _wrapFirst = "uu0u" // ctx => { {0,{ctx}} } //explanation: ctx -uu-> {{ctx}} -0-> {0,{ctx}} -u-> {{0,{ctx}}}
@@ -40,18 +55,12 @@ object Pair: // (a,b) = { {0,{a}}, {{b}} }
   val fromSelfEmpty = _wrapFirst ++ "<<0>>"
 
   val toSet = "rr" // (a,b) => {a,b} // explanation: { {0,{a}}, {{b}} } -r-> { 0,{a},{b} } -r-> {a,b}
-  val union = toSet + "r" // (a,b) => {a,b} // explanation: (a,b) -toSet-> {a,b} -r-> a union b
-  val or = union
-  val nor = or ++ negate
-  val nand = mapBoth(negate) ++ or
-  val and = nand ++ negate
-  val xor = fromSelfSelf ++ mapFirst(nand) ++ mapSecond(or) ++ and
-
-  val getSecond = General.ifmap(contains0)(clear) ++ union // first component will be the empty set
+  
+  val getSecond = General.ifmap(contains0)(clear) ++ BinOps.union // first component will be the empty set
   val getFirst = -getSecond
 
   // TODO: find more efficient way ?
-  val swap = mapSecond(_wrapFirst) ++ mapFirst(_wrapSecond) ++ union
+  val swap = mapSecond(_wrapFirst) ++ mapFirst(_wrapSecond) ++ BinOps.union
 
   inline def mapBoth(f: String) = map(map(map(f)))
   inline def mapFirst(f: String) = General.ifmap(contains0)(map(map(f)))
@@ -107,12 +116,12 @@ object Tupler:
     inline if n==2 then
       Pair.toSet
     else
-      Pair.mapFirst("u") ++ Pair.mapSecond(toSet(n-1)) ++ Pair.union     //(1 (2 3)) -> ({1} (2 3)) -> ({1} {2 3}) -> {1 2 3}
+      Pair.mapFirst("u") ++ Pair.mapSecond(toSet(n-1)) ++ BinOps.union     //(1 (2 3)) -> ({1} (2 3)) -> ({1} {2 3}) -> {1 2 3}
 
   private inline def union(n: Int): String = 
     check(n)
     inline if n==2 then
-      Pair.union
+      BinOps.union
     else
-      Pair.mapSecond(union(n-1)) ++ Pair.union //(1 (2 3)) -> (1 2u3) -> 1u2u3
+      Pair.mapSecond(union(n-1)) ++ BinOps.union //(1 (2 3)) -> (1 2u3) -> 1u2u3
 end Tupler
