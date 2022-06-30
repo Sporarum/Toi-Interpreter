@@ -45,9 +45,8 @@ object BinOps:
   val xor = fromSelfSelf ++ mapFirst(nand) ++ mapSecond(or) ++ and
 
   //Nat:
-  //TODO: Test
-  //val add = forFirstMapSecond("ua")
-  //val subDot = forFirstMapSecond("r")
+  val add = forFirstMapSecond("ua")
+  val subDot = Pair.swap ++ forFirstMapSecond("r")
 
 object Pair: // (a,b) = { {0,{a}}, {{b}} }
   import General._ ; import Bool._
