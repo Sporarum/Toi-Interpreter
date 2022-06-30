@@ -11,9 +11,16 @@ object General:
   inline def whiledo(cond: String)(f: String) = s"($cond[$f]" //)
   inline def ifmap(cond: String)(f: String) = s"($cond{$f}" //)
   inline def ifthen(cond: String)(f: String) = "u" ++ ifmap(cond)(f) ++ "r" // if cond(ctx) then f(ctx)
+  inline def ifnotthen(cond: String)(f: String) = "u" ++ -ifmap(cond)(f) ++ "r" // if not cond(ctx) then f(ctx)
   inline def map(f: String) = ifmap("<>")(f) // ctx.map(f) where f is a function
   inline def filter(cond: String) = map("u") ++ -ifmap(s"r$cond")(clear) ++ "r" // ctx.filter(cond)
 
+  inline def ifThenElse(cond: String, ifcase: String, elsecase: String) =
+    Pair.fromSelfSelf ++ Pair.mapFirst(cond)
+      ++   ifthen(Pair.getFirst)(Pair.mapSecond(ifcase))
+      ++   ifnotthen(Pair.getFirst)(Pair.mapSecond(elsecase))
+      ++ Pair.getSecond
+  
 object Bool:
   import General._
   val negate = "u-1" // if ctx == 0 then 1 else if ctx == 1 then 0
