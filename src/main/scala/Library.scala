@@ -35,7 +35,7 @@ object Bool:
 object BinOps:
   import General._ ; import Bool._; import Pair._
   //Setr:
-  val union = toSet + "r" // (a,b) => {a,b} // explanation: (a,b) -toSet-> {a,b} -r-> a union b
+  val union = Pair.toSet + "r" // (a,b) => {a,b} // explanation: (a,b) -toSet-> {a,b} -r-> a union b
 
   //Bool:
   val or = union
@@ -45,8 +45,9 @@ object BinOps:
   val xor = fromSelfSelf ++ mapFirst(nand) ++ mapSecond(or) ++ and
 
   //Nat:
-  val add = whiledo(Pair.getFirst)(Pair.mapSecond("ua") ++ Pair.mapFirst("r")) ++ Pair.getSecond
-
+  //TODO: Test
+  //val add = forFirstMapSecond("ua")
+  //val subDot = forFirstMapSecond("r")
 
 object Pair: // (a,b) = { {0,{a}}, {{b}} }
   import General._ ; import Bool._
@@ -57,7 +58,7 @@ object Pair: // (a,b) = { {0,{a}}, {{b}} }
   val fromEmptySelf = _wrapSecond ++ "<<><0>>"
   val fromSelfEmpty = _wrapFirst ++ "<<0>>"
 
-  val toSet = "rr" // (a,b) => {a,b} // explanation: { {0,{a}}, {{b}} } -r-> { 0,{a},{b} } -r-> {a,b}
+  inline val toSet = "rr" // (a,b) => {a,b} // explanation: { {0,{a}}, {{b}} } -r-> { 0,{a},{b} } -r-> {a,b}
   
   val getSecond = General.ifmap(contains0)(clear) ++ BinOps.union // first component will be the empty set
   val getFirst = -getSecond
@@ -70,6 +71,8 @@ object Pair: // (a,b) = { {0,{a}}, {{b}} }
   inline def mapSecond(f: String) = -mapFirst(f)
 
   inline def ifmap(cond: String)(f: String) = mapBoth(ifthen(cond)(f))
+
+  inline def forFirstMapSecond(f: String) = whiledo(Pair.getFirst)(Pair.mapSecond(f) ++ Pair.mapFirst("r")) ++ Pair.getSecond // for _1 to 0 do f
 
 
 class Tupler[N <: Int & Singleton](val n: N):
