@@ -41,17 +41,15 @@ object Bool:
 
 object BinOps:
   import General._ ; import Bool._; import Pair._
-  //Setr:
-  val union = Pair.toSet + "r" // (a,b) => {a,b} // explanation: (a,b) -toSet-> {a,b} -r-> a union b
 
-  //Bool:
+  //BoolBool:
   val or = union
   val nor = or ++ negate
   val nand = mapBoth(negate) ++ or
   val and = nand ++ negate
   val xor = fromSelfSelf ++ mapFirst(nand) ++ mapSecond(or) ++ and
 
-  //Nat:
+  //NatNat:
   val add = forFirstMapSecond("ua")
   val subDot = Pair.swap ++ forFirstMapSecond("r")
 
@@ -65,12 +63,13 @@ object Pair: // (a,b) = { {0,{a}}, {{b}} }
   val fromSelfEmpty = _wrapFirst ++ "<<0>>"
 
   inline val toSet = "rr" // (a,b) => {a,b} // explanation: { {0,{a}}, {{b}} } -r-> { 0,{a},{b} } -r-> {a,b}
+  val union = toSet + "r" // (a,b) => a u b // explanation: (a,b) -toSet-> {a,b} -r-> a union b
   
-  val getSecond = General.ifmap(contains0)(clear) ++ BinOps.union // first component will be the empty set
+  val getSecond = General.ifmap(contains0)(clear) ++ union // first component will be the empty set
   val getFirst = -getSecond
 
   // TODO: find more efficient way ?
-  val swap = mapSecond(_wrapFirst) ++ mapFirst(_wrapSecond) ++ BinOps.union
+  val swap = mapSecond(_wrapFirst) ++ mapFirst(_wrapSecond) ++ union
 
   inline def mapBoth(f: String) = map(map(map(f)))
   inline def mapFirst(f: String) = General.ifmap(contains0)(map(map(f)))
@@ -79,6 +78,7 @@ object Pair: // (a,b) = { {0,{a}}, {{b}} }
   inline def ifmap(cond: String)(f: String) = mapBoth(ifthen(cond)(f))
 
   inline def forFirstMapSecond(f: String) = whiledo(Pair.getFirst)(Pair.mapSecond(f) ++ Pair.mapFirst("r")) ++ Pair.getSecond // for _1 to 0 do f
+  inline def forSecondMapFirst(f: String) = whiledo(Pair.getSecond)(Pair.mapFirst(f) ++ Pair.mapSecond("r")) ++ Pair.getFirst // for _1 to 0 do f
 
 
 class Tupler[N <: Int & Singleton](val n: N):
@@ -87,7 +87,7 @@ class Tupler[N <: Int & Singleton](val n: N):
   inline def filledWithContext: String        = Tupler.filledWithContext(n)
   inline def get(i: Int): String              = Tupler.get(n)(i)
   inline def mapAt(i: Int)(f: String): String = Tupler.mapAt(n)(i)(f)
-  inline def map(f: String): String        = Tupler.map(n)(f)
+  inline def map(f: String): String           = Tupler.map(n)(f)
   inline def toSet: String                    = Tupler.toSet(n)
   inline def union: String                    = Tupler.union(n)
   inline def ifmap(cond: String)(f: String)   = this.map(General.ifthen(cond)(f))
@@ -128,12 +128,12 @@ object Tupler:
     inline if n==2 then
       Pair.toSet
     else
-      Pair.mapFirst("u") ++ Pair.mapSecond(toSet(n-1)) ++ BinOps.union     //(1 (2 3)) -> ({1} (2 3)) -> ({1} {2 3}) -> {1 2 3}
+      Pair.mapFirst("u") ++ Pair.mapSecond(toSet(n-1)) ++ Pair.union     //(1 (2 3)) -> ({1} (2 3)) -> ({1} {2 3}) -> {1 2 3}
 
   private inline def union(n: Int): String = 
     check(n)
     inline if n==2 then
-      BinOps.union
+      Pair.union
     else
-      Pair.mapSecond(union(n-1)) ++ BinOps.union //(1 (2 3)) -> (1 2u3) -> 1u2u3
+      Pair.mapSecond(union(n-1)) ++ Pair.union //(1 (2 3)) -> (1 2u3) -> 1u2u3
 end Tupler

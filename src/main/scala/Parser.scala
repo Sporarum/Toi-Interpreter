@@ -25,7 +25,7 @@ object Parser extends RegexParsers {
 
   def manualSet:  Parser[Setr] = "<" ~> set.* <~ ">"  ^^ { l => Setr(l.toSet) }
   def natural:    Parser[Setr] = number               ^^ { Setr.fromNat(_) }
-  def tuple:       Parser[Setr] = "(" ~> set.+ <~ ")" ^^ { Setr.fromTuple(_: _*) }
+  def tuple:      Parser[Setr] = "(" ~> set.+ <~ ")"  ^^ { Setr.fromTuple(_: _*) }
 
   def number: Parser[Nat]      = """(0|[1-9]\d*)""".r ^^ { _.toInt }
 }
