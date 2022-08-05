@@ -80,6 +80,15 @@ object Pair: // (a,b) = { {0,{a}}, {{b}} }
   inline def forFirstMapSecond(f: String) = whiledo(Pair.getFirst)(Pair.mapSecond(f) ++ Pair.mapFirst("r")) ++ Pair.getSecond // for _1 to 0 do f
   inline def forSecondMapFirst(f: String) = whiledo(Pair.getSecond)(Pair.mapFirst(f) ++ Pair.mapSecond("r")) ++ Pair.getFirst // for _1 to 0 do f
 
+  // ((a,b),c) -> (a,(b,c))
+  val leftAssociativeToRightAssociative = fromSelfSelf  ++ mapFirst(  getFirst ++ getFirst ) //branch: ((a,b),c) -> (a,b) -> a
+                                                        ++ mapSecond( mapFirst(getSecond))   //branch: ((a,b),c) -> (b,c)
+                                          // ctx=((a,b),c) -> (ctx,ctx) -> (a,(b,c))
+  // (a,(b,c)) -> ((a,b),c)
+  val rightAssociativeToLeftAssociative = fromSelfSelf  ++ mapFirst(  mapSecond(getFirst))     //branch: (a,(b,c)) -> (a,b)
+                                                        ++ mapSecond( getSecond ++ getSecond ) //branch: (a,(b,c)) -> (b,c) -> c
+                                            // ctx=(a,(b,c)) -> (ctx,ctx) -> ((a,b),c)
+
 
 class Tupler[N <: Int & Singleton](val n: N):
   //inline if n < 2 then error("Tuple with less than 2 elements") // inline if can only be used in an inline method
