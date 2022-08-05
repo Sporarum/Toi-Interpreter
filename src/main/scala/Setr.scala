@@ -3,12 +3,14 @@ import scala.annotation.tailrec
 val printAsOrdinals = true
 val printAsTuple    = true
 val printAsPair     = true
+val printAsList     = true
 
 def optionIf[T](cond: Boolean)(op: => Option[T]): Option[T] = if cond then op else None
 
 type Nat = Int
 
 val Empty = Setr(Set.empty)
+val Nil = Empty
 
 object Singleton:
   def unapply(s: Setr): Option[Setr] = s.asSingletonOption
@@ -27,7 +29,11 @@ object Setr:
     case Seq(a) => a
     case a :: rest => 
       val nRest = fromTuple(rest: _*)
-      Setr(_fromPair(a,nRest))(pairOp = Some(a, nRest), tupleOp = Some(a +: nRest.asTuple)) //TODO: test, then add tupleOp to Setr
+      Setr(_fromPair(a,nRest))(pairOp = Some(a, nRest), tupleOp = Some(a +: nRest.asTuple))
+  
+  def fromList(l: Setr*): Setr = 
+    val tupleElems = l.map(_.wrap) :+ Nil
+    fromTuple(tupleElems: _*)
 
 case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Setr]] = None, pairOp: Option[(Setr,Setr)] = None):
   /**
@@ -45,17 +51,19 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Se
   lazy val asSingletonOption: Option[Setr] = computeAsSingletonOption
   
   /**
-   * Is this set a pair ? assuming (a,b) = {{a},{a,b}}
+   * Is this set a pair ? assuming (a,b) = { {{},{a}}, {{b}} }
    * if yes, returns Some of that pair
    * else returns None
   **/
-  lazy val asPairOption: Option[(Setr, Setr)] = computeAsPairOption
+  lazy val asPairOption: Option[(Setr, Setr)] = pairOp orElse computeAsPairOption
 
   /**
    * this set as a tuple, assuming (a,b,c,...) = (a,(b,c,...)), and (this) otherwise
   **/
   lazy val asTuple: List[Setr] = tupleOp getOrElse computeAsTuple
   lazy val asTupleOption: Option[List[Setr]] = tupleOp orElse computeAsTupleOption
+
+  lazy val asListOption: Option[List[Setr]] = computeAsListOption
 
   def wrap: Setr = Setr(Set(this)) // creates: {this}
   def increment: Setr = asNatOption match
@@ -72,9 +80,10 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Se
   def plainString: String = this.s.map(_.plainString).mkString("<"," ",">")
   override def toString: String = {
       optionIf(printAsOrdinals)(this.asNatOption) orElse
+      optionIf(printAsList    )(this.asListOption.map(_.mkString("<["," ","]>"))) orElse
       optionIf(printAsTuple   )(this.asTupleOption.map(_.mkString("("," ",")"))) orElse
-      optionIf(printAsPair    )(this.asPairOption)
-
+      optionIf(printAsPair    )(this.asPairOption) orElse
+      None
     }.map(_.toString) getOrElse s.mkString("<"," ",">")
 
   // Usual Set methods:
@@ -90,7 +99,7 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Se
   def map(f: Setr => Setr): Setr = Setr(s.map(f))
   def flatMap(f: Setr => IterableOnce[Setr]): Setr = Setr(s.flatMap(f))
 
-  export s.{isEmpty, size, contains}
+  export s.{isEmpty, nonEmpty, size, contains}
 
   // computeAsXOption:
   
@@ -142,4 +151,10 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Se
   
   private def computeAsTupleOption: Option[List[Setr]] = //only "real" tuples
     Some(asTuple).filter(_.size >= 2)
+
+  private def computeAsListOption: Option[List[Setr]] = computeAsTupleOption.flatMap{ t =>
+    Option.when(t.init.forall(_.nonEmpty) && t.last.isEmpty){ 
+      t.init.map(_.decrement)
+    }
+  }
   
