@@ -146,3 +146,31 @@ object Tupler:
     else
       Pair.mapSecond(union(n-1)) ++ Pair.union //(1 (2 3)) -> (1 2u3) -> 1u2u3
 end Tupler
+
+object Listr: // List() = 0, List(a,b, ...)  = (<a>,List(b,...)) => all elements get singleton wrapped
+  import General._ ; import Bool._
+  // keep(f) with ctx=l results ctx=(l, f(l))
+  inline def keep(f: String) = Pair.fromSelfSelf ++ Pair.mapFirst(Pair.getFirst) ++ Pair.mapSecond(f)
+  // and keep* mean * where the listr is maintained, so returns (Listr, Any)
+
+  val headOption = Pair.getFirst
+  val head = headOption ++ "r"
+  val tail = Pair.getSecond
+  
+  val tailHeadOption = Pair.swap // (<a>,List(b,...)) -> (List(b,...), <a>)
+  val tailHead = tailHeadOption ++ Pair.mapSecond("r") // (<a>,List(b,...)) -> (List(b,...), <a>) -> (List(b,...), a)
+
+  val reverse = Pair.fromSelfEmpty ++ whiledo(Pair.getFirst)( // splits into (l, acc), and elements get successively prepended from l to acc
+      Pair.mapFirst(tailHeadOption) ++ Pair.leftAssociativeToRightAssociative // ((<h>, t), acc) -> ((t, <h>), acc) -latra-> (t, (<h>,acc)) = (t, h :: acc)
+    ) ++ Pair.getSecond
+
+  object Any:
+    val prepend = Pair.mapSecond("u") ++ Pair.swap
+    inline def append() = Pair.mapFirst(reverse) ++ prepend ++ reverse
+
+  object Nat: 
+    val getOption = Pair.forSecondMapFirst(Listr.tail) ++ Listr.headOption
+    val get = getOption ++ "r"
+
+    val keepGetOption = keep(getOption)
+    val keepGet = keep(get)
