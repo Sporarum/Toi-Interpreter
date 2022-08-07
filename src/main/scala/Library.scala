@@ -176,3 +176,14 @@ object Listr: // List() = 0, List(a,b, ...)  = (<a>,List(b,...)) => all elements
 
     val keepGetOption = keep(getOption)
     val keepGet = keep(get)
+
+object Tape: // (curr +: left, right) where left and right are lists // <{a b [c] d}> = (<[c b a]> <[d]>)
+  import General._ ; import Bool._
+  val curr = Pair.getFirst ++ Listr.head
+  val moveLeft  = ifThenElse(Pair.getFirst ++ isEmpty, Pair.mapSecond(Listr.prependZero), Listr.moveLeftHeadToRight)
+  val moveRight = ifThenElse(Pair.getSecond ++ isEmpty, Pair.mapFirst(Listr.prependZero), Listr.moveRightHeadToLeft)
+
+  object Any: // ctx = (<{a b [c] d}> x) = ((<[c b a]> <[d]>) x)
+    val update = Pair.swap ++ show ++ Pair.rightAssociativeToLeftAssociative ++ show ++ Pair.mapFirst( Pair.mapFirst("u") ++ Pair.mapSecond(Listr.tail) )
+    // ((<[c b a]> <[d]>) x) -> (x (<[c b a]> <[d]>)) -> ((x <[c b a]>) <[d]>) -> ((<x> <[c b a]>) <[d]>) -> ((<x> <[b a]>) <[d]>) = (<[x b a]> <[d]>)
+
