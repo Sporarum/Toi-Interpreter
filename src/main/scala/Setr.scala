@@ -4,6 +4,7 @@ val printAsOrdinals = true
 val printAsTuple    = true
 val printAsPair     = true
 val printAsList     = true
+val printAsTape     = true
 
 def optionIf[T](cond: Boolean)(op: => Option[T]): Option[T] = if cond then op else None
 
@@ -34,6 +35,10 @@ object Setr:
   def fromList(l: Setr*): Setr = 
     val tupleElems = l.map(_.wrap) :+ Nil
     fromTuple(tupleElems: _*)
+
+  def fromTape(l: List[Setr], h: Setr, r: List[Setr]): Setr = 
+    val a = h +: l.reverse
+    fromPair( fromList(a: _*), fromList(r: _*) )
 
 case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Setr]] = None, pairOp: Option[(Setr,Setr)] = None):
   /**
@@ -66,6 +71,8 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Se
   // List() = 0, List(a,b, ...)  = (<a>,List(b,...)) => all elements get singleton wrapped
   lazy val asListOption: Option[List[Setr]] = computeAsListOption
 
+  lazy val asTapeOption: Option[(List[Setr], Setr, List[Setr])] = computeAsTapeOption
+
   def wrap: Setr = Setr(Set(this)) // creates: {this}
   def increment: Setr = asNatOption match
     case Some(n) => Setr( s + this )(natOp = Some(n+1))
@@ -80,12 +87,13 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Se
 
   def plainString: String = this.s.map(_.plainString).mkString("<"," ",">")
   override def toString: String = {
-      optionIf(printAsOrdinals)(this.asNatOption) orElse
-      optionIf(printAsList    )(this.asListOption.filter(_.nonEmpty).map(_.mkString("<["," ","]>"))) orElse
-      optionIf(printAsTuple   )(this.asTupleOption.map(_.mkString("("," ",")"))) orElse
-      optionIf(printAsPair    )(this.asPairOption) orElse
-      None
-    }.map(_.toString) getOrElse s.mkString("<"," ",">")
+    optionIf(printAsOrdinals)(this.asNatOption.map(_.toString)) orElse
+    optionIf(printAsTape    )(this.asTapeOption.map( (l,h,r) => l.mkString("<{"," "," [") ++ h.toString ++ r.mkString("] "," ","}>") )) orElse
+    optionIf(printAsList    )(this.asListOption.filter(_.nonEmpty).map(_.mkString("<["," ","]>"))) orElse
+    optionIf(printAsTuple   )(this.asTupleOption.map(_.mkString("("," ",")"))) orElse
+    optionIf(printAsPair    )(this.asPairOption.map(_.toString)) orElse
+    Some( s.mkString("<"," ",">") )
+  }.get
 
   // Usual Set methods:
 
@@ -158,4 +166,12 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Se
       t.init.map(_.decrement)
     }
   } orElse Option.when(isEmpty)(List())
+
+  private def computeAsTapeOption: Option[(List[Setr], Setr, List[Setr])] = computeAsPairOption.flatMap{ (_a,_b) => // <{a b [c] d}> = (<[c b a]> <[d]>)
+    (_a.asListOption zip _b.asListOption).map{ (a,b) =>
+      val (curr, init) = if a.isEmpty then (Empty, List()) else (a.head, a.tail.reverse)
+      val tail = b
+      (init, curr, tail)
+    }
+  }
   

@@ -21,12 +21,13 @@ object Parser extends RegexParsers {
   def singletonWrap = "u" ^^^ Wrap
 
 
-  def set:  Parser[Setr]       = manualSet | natural | tuple | list
+  def set:  Parser[Setr]       = manualSet | natural | tuple | list | tape
 
   def manualSet:  Parser[Setr] = "<" ~> set.* <~ ">"   ^^ { l => Setr(l.toSet) }
   def natural:    Parser[Setr] = number                ^^ { Setr.fromNat(_) }
   def tuple:      Parser[Setr] = "(" ~> set.+ <~ ")"   ^^ { Setr.fromTuple(_: _*) }
   def list:       Parser[Setr] = "<[" ~> set.* <~ "]>" ^^ { Setr.fromList(_: _*) }
+  def tape:       Parser[Setr] = "<{" ~> set.* ~ ("[" ~> set <~ "]") ~ set.* <~ "}>" ^^ { case l ~ h ~ r => Setr.fromTape(l,h,r)}
 
   def number: Parser[Nat]      = """(0|[1-9]\d*)""".r ^^ { _.toInt }
 }
