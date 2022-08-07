@@ -157,12 +157,14 @@ object Listr: // List() = 0, List(a,b, ...)  = (<a>,List(b,...)) => all elements
   val head = headOption ++ "r"
   val tail = Pair.getSecond
   
-  val tailHeadOption = Pair.swap // (<a>,List(b,...)) -> (List(b,...), <a>)
-  val tailHead = tailHeadOption ++ Pair.mapSecond("r") // (<a>,List(b,...)) -> (List(b,...), <a>) -> (List(b,...), a)
+  val moveLeftHeadToRight = Pair.mapFirst(Pair.swap) ++ Pair.leftAssociativeToRightAssociative // (h :: t, acc) = ((<h>, t), acc) -> ((t, <h>), acc) -latra-> (t, (<h>,acc)) = (t, h :: acc)
+  val moveRightHeadToLeft = Pair.rightAssociativeToLeftAssociative ++ Pair.mapFirst(Pair.swap) // (acc, h :: t) = (acc, (<h>, t)) -> ((acc, <h>), t) -> ((<h>, acc), t) = (h :: acc, t)
 
   val reverse = Pair.fromSelfEmpty ++ whiledo(Pair.getFirst)( // splits into (l, acc), and elements get successively prepended from l to acc
-      Pair.mapFirst(tailHeadOption) ++ Pair.leftAssociativeToRightAssociative // ((<h>, t), acc) -> ((t, <h>), acc) -latra-> (t, (<h>,acc)) = (t, h :: acc)
+      moveLeftHeadToRight
     ) ++ Pair.getSecond
+
+  val prependZero = Pair._wrapSecond ++ "<<><<0>>>" //like Pair.fromEmptySelf, but with an extra <>, so we have (<0>, ctx)
 
   object Any:
     val prepend = Pair.mapSecond("u") ++ Pair.swap
