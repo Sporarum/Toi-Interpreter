@@ -63,6 +63,7 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Se
   lazy val asTuple: List[Setr] = tupleOp getOrElse computeAsTuple
   lazy val asTupleOption: Option[List[Setr]] = tupleOp orElse computeAsTupleOption
 
+  // List() = 0, List(a,b, ...)  = (<a>,List(b,...)) => all elements get singleton wrapped
   lazy val asListOption: Option[List[Setr]] = computeAsListOption
 
   def wrap: Setr = Setr(Set(this)) // creates: {this}

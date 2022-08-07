@@ -11,8 +11,8 @@ object Parser extends RegexParsers {
   def add:     Parser[Add]          =        set  ^^ { Add(_) }
   def remove:  Parser[Remove]       = "-" ~> set  ^^ { Remove(_) }
 
-  def foreach: Parser[Foreach] = "-".? ~ "(" ~ program ~ "{" ~ program <~ "}" ^^ { case op ~ _ ~ p ~ _ ~ q => Foreach(p, q, op.isDefined) }
-  def whileDo: Parser[WhileDo] = "-".? ~ "(" ~ program ~ "[" ~ program <~ "]" ^^ { case op ~ _ ~ p ~ _ ~ q => WhileDo(p, q, op.isDefined) }
+  def foreach: Parser[Foreach] = "-".? ~ "(" ~ program ~ "{" ~ program <~ "}" ^^ { case op ~ _ ~ p ~ _ ~ q => Foreach(p, q, op.isDefined) } //)
+  def whileDo: Parser[WhileDo] = "-".? ~ "(" ~ program ~ "[" ~ program <~ "]" ^^ { case op ~ _ ~ p ~ _ ~ q => WhileDo(p, q, op.isDefined) } //)
 
   def newline       = "n" ^^^ Newline
   def printContext  = "d" ^^^ PrintContext

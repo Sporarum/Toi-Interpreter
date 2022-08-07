@@ -15,9 +15,9 @@ object General:
   inline def map(f: String) = ifmap("<>")(f) // ctx.map(f) where f is a function
   inline def filter(cond: String) = map("u") ++ -ifmap(s"r$cond")(clear) ++ "r" // ctx.filter(cond)
 
-  inline def ifThenElse(cond: String, ifcase: String, elsecase: String) =
+  inline def ifThenElse(cond: String, thencase: String, elsecase: String) =
     Pair.fromSelfSelf ++ Pair.mapFirst(cond)
-      ++   ifthen(Pair.getFirst)(Pair.mapSecond(ifcase))
+      ++   ifthen(Pair.getFirst)(Pair.mapSecond(thencase))
       ++   ifnotthen(Pair.getFirst)(Pair.mapSecond(elsecase))
       ++ Pair.getSecond
   
