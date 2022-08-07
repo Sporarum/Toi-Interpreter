@@ -21,7 +21,7 @@ object Parser extends RegexParsers {
   def singletonWrap = "u" ^^^ Wrap
 
 
-  def set:  Parser[Setr]       = manualSet | natural | tuple
+  def set:  Parser[Setr]       = manualSet | natural | tuple | list
 
   def manualSet:  Parser[Setr] = "<" ~> set.* <~ ">"   ^^ { l => Setr(l.toSet) }
   def natural:    Parser[Setr] = number                ^^ { Setr.fromNat(_) }

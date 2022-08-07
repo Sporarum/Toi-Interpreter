@@ -80,7 +80,7 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Se
   def plainString: String = this.s.map(_.plainString).mkString("<"," ",">")
   override def toString: String = {
       optionIf(printAsOrdinals)(this.asNatOption) orElse
-      optionIf(printAsList    )(this.asListOption.map(_.mkString("<["," ","]>"))) orElse
+      optionIf(printAsList    )(this.asListOption.filter(_.nonEmpty).map(_.mkString("<["," ","]>"))) orElse
       optionIf(printAsTuple   )(this.asTupleOption.map(_.mkString("("," ",")"))) orElse
       optionIf(printAsPair    )(this.asPairOption) orElse
       None
@@ -152,9 +152,9 @@ case class Setr(s: Set[Setr])(natOp: Option[Nat] = None, tupleOp: Option[List[Se
   private def computeAsTupleOption: Option[List[Setr]] = //only "real" tuples
     Some(asTuple).filter(_.size >= 2)
 
-  private def computeAsListOption: Option[List[Setr]] = computeAsTupleOption.flatMap{ t =>
+  private def computeAsListOption: Option[List[Setr]] = computeAsTupleOption.flatMap{ t => // List() = 0, List(a,b, ...)  = (<a>,List(b,...)) => all elements get singleton wrapped
     Option.when(t.init.forall(_.nonEmpty) && t.last.isEmpty){ 
       t.init.map(_.decrement)
     }
-  }
+  } orElse Option.when(isEmpty)(List())
   
